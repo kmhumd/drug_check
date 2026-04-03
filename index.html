@@ -251,11 +251,29 @@
       font-weight: 800;
       line-height: 1.4;
     }
-    .modal-frame {
+    .modal-body {
+      flex: 1;
+      overflow: auto;
+      background: #eef2f7;
+      padding: 12px;
+    }
+    .pdf-status {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-bottom: 10px;
+    }
+    .pdf-stage {
+      min-height: 240px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .pdf-canvas {
+      display: block;
       width: 100%;
-      height: 100%;
-      border: 0;
-      background: #f1f5f9;
+      height: auto;
+      background: white;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, .12);
     }
     @media (max-width: 900px) {
       .card {
@@ -327,10 +345,17 @@
         <div class="modal-title" id="pdfModalTitle">PDF参照</div>
         <button class="ghost" id="closePdfBtn" type="button">閉じる</button>
       </div>
-      <iframe class="modal-frame" id="pdfFrame" title="出典PDF"></iframe>
+      <div class="modal-body">
+        <div class="pdf-status" id="pdfStatus">PDFを読み込みます。</div>
+        <div class="pdf-stage">
+          <canvas class="pdf-canvas" id="pdfCanvas"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="yakuzai_2024.base64.js"></script>
   <script>
     const MASTER = [{"generic": "EPA・DHA（オメガ-3脂肪酸エチル）", "stop_period": "7-10日", "category": "脂質異常症用薬", "notes": "", "brands": ["オメガ-3脂肪酸エチル", "ロトリガ"]}, {"generic": "EPA（イコサペント酸エチル）", "stop_period": "7-10日", "category": "脂質異常症用薬", "notes": "", "brands": ["イコサペント酸エチル", "エパデール"]}, {"generic": "アキシチニブ", "stop_period": "24時間", "category": "抗がん剤", "notes": "", "brands": ["インライタ"]}, {"generic": "アスピリン", "stop_period": "7-10日", "category": "抗血小板薬", "notes": "", "brands": ["アスピリン", "アスファネート配合錠", "ニトギス配合錠", "バイアスピリン", "バッサミン配合錠", "バファリン配合錠", "ファモター配合錠"]}, {"generic": "アスピリン/クロピドグレル硫酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "配合剤。アスピリン7-10日、クロピドグレル7-14日", "brands": ["コンプラビン配合錠"]}, {"generic": "アスピリン/ボノプラザンフマル酸塩", "stop_period": "7-10日", "category": "抗血小板薬", "notes": "配合剤", "brands": ["キャブピリン配合錠"]}, {"generic": "アスピリン/ランソプラゾール", "stop_period": "7-10日", "category": "抗血小板薬", "notes": "配合剤", "brands": ["タケルダ配合錠"]}, {"generic": "アダリムマブ", "stop_period": "2週間", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["アダリムマブBS", "ヒュミラ"]}, {"generic": "アバタセプト", "stop_period": "医師の判断", "category": "T細胞選択的共刺激調節剤", "notes": "注射剤", "brands": ["オレンシア"]}, {"generic": "アピキサバン", "stop_period": "1-3日", "category": "抗凝固薬", "notes": "", "brands": ["エリキュース"]}, {"generic": "アフリベルセプト ベータ", "stop_period": "6週間", "category": "抗がん剤", "notes": "注射剤", "brands": ["ザルトラップ"]}, {"generic": "アルガトロバン水和物", "stop_period": "2時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["アルガトロバン", "スロンノン", "ノバスタン"]}, {"generic": "イフェンプロジル酒石酸塩", "stop_period": "2日", "category": "脳循環・代謝改善薬", "notes": "", "brands": ["イフェンプロジル酒石酸塩", "セロクラール"]}, {"generic": "イプジラスト", "stop_period": "3日", "category": "脳循環・代謝改善薬", "notes": "", "brands": ["ケタス"]}, {"generic": "イプラグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["スーグラ錠"]}, {"generic": "イプラグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "配合剤", "brands": ["スージャヌ配合錠"]}, {"generic": "インフリキシマブ", "stop_period": "4週間", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["インフリキシマブBS", "レミケード"]}, {"generic": "ウステキヌマブ", "stop_period": "6週間", "category": "ヒト型抗ヒトIL-12/23p40モノクローナル抗体", "notes": "注射剤", "brands": ["ステラーラ"]}, {"generic": "エストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "", "brands": ["エストラジオール錠", "エストラーナテープ", "ジュリナ", "ディビゲル", "ル・エストロジェル"]}, {"generic": "エストリオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "", "brands": ["エストリオール", "エストリール", "エストリール膣錠", "ホーリン", "ホーリンV膣用錠"]}, {"generic": "エタネルセプト", "stop_period": "1-2週間/2-3週間（汚染環境）", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["エタネルセプトBS", "エンブレル"]}, {"generic": "エチニルエストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["プロセキソール"]}, {"generic": "エドキサバントシル酸塩水和物", "stop_period": "1-2日", "category": "抗凝固薬", "notes": "", "brands": ["リクシアナ"]}, {"generic": "エノキサパリンナトリウム", "stop_period": "12時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["クレキサン"]}, {"generic": "エベロリムス", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["アフィニトール"]}, {"generic": "エベロリムス", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "免疫抑制剤", "brands": ["サーティカン"]}, {"generic": "エンパグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["ジャディアンス錠"]}, {"generic": "エンパグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "配合剤", "brands": ["トラディアンス配合錠"]}, {"generic": "オザグレルナトリウム", "stop_period": "24時間", "category": "トロンボキサンA2阻害薬", "notes": "", "brands": ["オザグレルNa", "オザグレルナトリウム"]}, {"generic": "オザグレルナトリウム", "stop_period": "24時間", "category": "トロンボキサンA2阻害薬", "notes": "注射剤", "brands": ["カタクロット", "キサンボン"]}, {"generic": "オザグレル塩酸塩水和物", "stop_period": "1-2日", "category": "トロンボキサンA2阻害薬", "notes": "", "brands": ["ドメナン"]}, {"generic": "カナグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["カナグル錠"]}, {"generic": "カナグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "配合剤", "brands": ["カナリア配合錠"]}, {"generic": "カボザンチニブリンゴ酸塩錠", "stop_period": "28日", "category": "抗がん剤", "notes": "", "brands": ["カボメティクス"]}, {"generic": "クロピドグレル硫酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "", "brands": ["クロピドグレル", "プラビックス", "ロレアス"]}, {"generic": "ゴリムマブ", "stop_period": "2-4週間（可能なら4週間）", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["シンポニー"]}, {"generic": "サリドマイド", "stop_period": "1日", "category": "抗がん剤", "notes": "", "brands": ["サレド"]}, {"generic": "サルポグレラート塩酸塩", "stop_period": "1-2日", "category": "抗血小板薬", "notes": "", "brands": ["アンプラーグ", "サルポグレラート塩酸塩"]}, {"generic": "シロスタゾール", "stop_period": "2-3日", "category": "抗血小板薬", "notes": "", "brands": ["コートリズム", "シロシナミン", "シロスタゾール", "シロスレット", "プレタール", "プレトモール", "ホルダゾール"]}, {"generic": "シロリムス", "stop_period": "14日以上（肺移植）/医師の判断（その他）", "category": "抗がん剤", "notes": "", "brands": ["ラパリムス"]}, {"generic": "ジピリダモール", "stop_period": "1-2日", "category": "冠血管拡張薬", "notes": "", "brands": ["ジピリダモール", "ペルサンチン", "ヨウリダモール"]}, {"generic": "ジラゼプ塩酸塩水和物", "stop_period": "1日", "category": "冠血管拡張薬", "notes": "", "brands": ["コメリアンコーワ", "ジラゼプ塩酸塩"]}, {"generic": "スニチニブリンゴ酸塩", "stop_period": "7-10日", "category": "抗がん剤", "notes": "", "brands": ["スーテント"]}, {"generic": "セルトリズマブペゴル", "stop_period": "医師の判断", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["シムジア"]}, {"generic": "ソラフェニブトシル酸塩", "stop_period": "28日", "category": "抗がん剤", "notes": "最近の臨床報告では7日休薬報告も多い", "brands": ["ネクサバール"]}, {"generic": "ダパグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["フォシーガ錠"]}, {"generic": "ダビガトランエテキシラートメタンスルホン酸塩", "stop_period": "1-4日", "category": "抗凝固薬", "notes": "", "brands": ["プラザキサ"]}, {"generic": "ダルテパリンナトリウム", "stop_period": "12時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["ダルテパリンNa", "フラグミン", "リザルミン"]}, {"generic": "チカグレロル", "stop_period": "5日", "category": "抗血小板薬", "notes": "", "brands": ["ブリリンタ"]}, {"generic": "チクロピジン塩酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "", "brands": ["チクロピジン塩酸塩", "パナルジン", "マイトジン"]}, {"generic": "テムシロリムス", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "注射剤", "brands": ["トーリセル"]}, {"generic": "デソゲストレル・エチニルエストラジオール", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["フォボワール錠21/28", "マーベロン21/28"]}, {"generic": "トファシチニブクエン酸塩", "stop_period": "術前1週間～術後1週間", "category": "JAK阻害薬", "notes": "", "brands": ["ゼルヤンツ"]}, {"generic": "トホグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["デベルザ錠"]}, {"generic": "トラピジル", "stop_period": "1日", "category": "冠血管拡張薬", "notes": "", "brands": ["トラピジル", "ロコルナール"]}, {"generic": "トリメタジジン塩酸塩", "stop_period": "2日", "category": "虚血性心疾患治療薬", "notes": "", "brands": ["バスタレルF"]}, {"generic": "ドロスピレノン・エチニルエストラジオールベータデクス", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["ドロエチ配合錠", "ヤーズフレックス配合錠", "ヤーズ配合錠"]}, {"generic": "ニセルゴリン", "stop_period": "不要", "category": "脳循環・代謝改善薬", "notes": "念のため休薬なら2-3日前", "brands": ["サアミオン", "ニセルゴリン", "マリレオンN"]}, {"generic": "ニンテダニブエタンスルホン酸塩", "stop_period": "7日", "category": "抗線維化剤", "notes": "", "brands": ["オフェブ"]}, {"generic": "ノルエチステロン・エチニルエストラジオール", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["シンフェーズT28", "フリウェル配合錠LD", "ルナベル配合錠LD", "ルナベル配合錠ULD"]}, {"generic": "ノルゲストレル・エチニルエストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["プラノバール配合錠"]}, {"generic": "バゼドキシフェン酢酸塩", "stop_period": "3日", "category": "骨粗鬆症治療薬", "notes": "", "brands": ["バゼドキシフェン", "ビビアント"]}, {"generic": "バリシチニブ", "stop_period": "医師の判断", "category": "JAK阻害薬", "notes": "", "brands": ["オルミエント"]}, {"generic": "バンデタニブ", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["カプレルサ"]}, {"generic": "パゾパニブ塩酸塩", "stop_period": "14日", "category": "抗がん剤", "notes": "海外添付文書では少なくとも7日", "brands": ["ヴォトリエント"]}, {"generic": "フォンダパリヌクスナトリウム", "stop_period": "4日", "category": "抗凝固薬", "notes": "注射剤", "brands": ["アリクストラ"]}, {"generic": "ブホルミン塩酸塩", "stop_period": "術前2日～術後2日", "category": "ビグアナイド薬", "notes": "", "brands": ["ジベトス", "ブホルミン塩酸塩"]}, {"generic": "プラスグレル塩酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "", "brands": ["エフィエント"]}, {"generic": "ヘパリンカルシウム", "stop_period": "4時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["ヘパリンCa", "ヘパリンカルシウム"]}, {"generic": "ヘパリンナトリウム", "stop_period": "4時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["ヘパリンNa", "ヘパリンナトリウム"]}, {"generic": "ベバシズマブ", "stop_period": "6週間（大手術）/4週間（小手術）/10-14日（ポート造設等）", "category": "抗がん剤", "notes": "注射剤", "brands": ["アバスチン", "ベバシズマブBS"]}, {"generic": "ベラプロストナトリウム", "stop_period": "1-2日", "category": "プロスタグランジン製剤", "notes": "", "brands": ["ケアロードLA", "ベラサスLA", "ベラプロストNa", "ベラプロストナトリウム"]}, {"generic": "ベラプロストナトリウム", "stop_period": "1-2日", "category": "プロスタグランジン製剤", "notes": "索引では7-10日の表記もあり、元一覧では1-2日", "brands": ["ドルナー", "プロサイリン"]}, {"generic": "ポマリドミド", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["ポマリスト"]}, {"generic": "メトトレキサート", "stop_period": "不要（整形外科予定手術）/医師の判断", "category": "免疫抑制薬", "notes": "12mg/週超の高用量投与、整形外科以外の手術", "brands": ["メソトレキセート", "メトトレキサート", "リウマトレックス"]}, {"generic": "メトホルミン塩酸塩", "stop_period": "術前2日～術後2日", "category": "ビグアナイド薬", "notes": "", "brands": ["グリコラン", "メトグルコ", "メトホルミン塩酸塩"]}, {"generic": "メトホルミン塩酸塩", "stop_period": "術前2日～術後2日", "category": "ビグアナイド薬", "notes": "配合剤", "brands": ["イニシンク", "エクメット", "メタクト", "メトアナ配合錠"]}, {"generic": "メドロキシプロゲステロン酢酸エステル", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "", "brands": ["ヒスロン", "プロベラ"]}, {"generic": "メドロキシプロゲステロン酢酸エステル", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "200mgは術後1週間", "brands": ["メドロキシプロゲステロン酢酸エステル錠"]}, {"generic": "メドロキシプロゲステロン酢酸エステル", "stop_period": "術後1週間", "category": "女性ホルモン製剤", "notes": "高用量200mg", "brands": ["ヒスロンH200mg"]}, {"generic": "ラムシルマブ", "stop_period": "28日", "category": "抗がん剤", "notes": "注射剤", "brands": ["サイラムザ"]}, {"generic": "ラロキシフェン塩酸塩", "stop_period": "3日", "category": "骨粗鬆症治療薬", "notes": "", "brands": ["エビスタ", "ラロキシフェン塩酸塩"]}, {"generic": "リバーロキサバン", "stop_period": "1-2日", "category": "抗凝固薬", "notes": "", "brands": ["イグザレルト"]}, {"generic": "リマプロストアルファデクス", "stop_period": "1-2日", "category": "プロスタグランジン製剤", "notes": "", "brands": ["オパルモン", "リマプロストアルファデクス"]}, {"generic": "ルキソリチニブ", "stop_period": "医師の判断", "category": "JAK阻害薬", "notes": "", "brands": ["ジャカビ"]}, {"generic": "ルセオグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["ルセフィ錠"]}, {"generic": "レゴラフェニブ", "stop_period": "2週間", "category": "抗がん剤", "notes": "", "brands": ["スチバーガ"]}, {"generic": "レナリドミド水和物", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["レナリドミド", "レブラミド"]}, {"generic": "レボノルゲストレル・エストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["ウェールナラ配合錠"]}, {"generic": "レボノルゲストレル・エチニルエストラジオール", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["アンジュ21/28", "ジェミーナ配合錠", "トリキュラー錠21/28", "ラベルフィーユ錠21/28"]}, {"generic": "レンバチニブメシル酸塩", "stop_period": "7日（半減期の5倍相当）/2日（軽度の処置）", "category": "抗がん剤", "notes": "", "brands": ["レンビマ"]}, {"generic": "ワルファリンカリウム", "stop_period": "3-5日", "category": "抗凝固薬", "notes": "", "brands": ["ワルファリンK", "ワーファリン"]}, {"generic": "結合型エストロゲン", "stop_period": "4週以内", "category": "女性ホルモン製剤", "notes": "", "brands": ["プレマリン"]}, {"generic": "酢酸ノルエチステロン・エストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["メノエイドコンビパッチ"]}];
 
@@ -346,7 +371,17 @@
 
     const modal = document.getElementById("pdfModal");
     const modalTitle = document.getElementById("pdfModalTitle");
-    const pdfFrame = document.getElementById("pdfFrame");
+    const pdfStatus = document.getElementById("pdfStatus");
+    const pdfCanvas = document.getElementById("pdfCanvas");
+    const pdfCtx = pdfCanvas.getContext("2d");
+
+    let pdfDocTask = null;
+    let pdfDoc = null;
+    let activePdfPage = 1;
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
 
     MASTER.forEach((item, index) => {
       item.pdf_page = PDF_PAGE_MAP[index] || 1;
@@ -516,15 +551,70 @@
 
     function openPdfModal(page, generic) {
       modalTitle.textContent = `${generic} の出典PDF確認`;
-      pdfFrame.src = `${PDF_FILE}#page=${page}&zoom=page-width`;
       modal.classList.add("open");
       modal.setAttribute("aria-hidden", "false");
+      activePdfPage = page;
+      renderPdfPage(page);
     }
 
     function closePdfModal() {
       modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
-      pdfFrame.src = "";
+      pdfStatus.textContent = "PDFを読み込みます。";
+      pdfCtx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+      pdfCanvas.width = 0;
+      pdfCanvas.height = 0;
+    }
+
+    function base64ToUint8Array(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    async function getPdfDoc() {
+      if (pdfDoc) return pdfDoc;
+      if (!window.pdfjsLib || typeof PDF_BASE64 !== "string") {
+        throw new Error("PDF viewer is unavailable.");
+      }
+      if (!pdfDocTask) {
+        pdfDocTask = pdfjsLib.getDocument({ data: base64ToUint8Array(PDF_BASE64) }).promise;
+      }
+      pdfDoc = await pdfDocTask;
+      return pdfDoc;
+    }
+
+    async function renderPdfPage(pageNumber) {
+      try {
+        pdfStatus.textContent = `PDF ${pageNumber} ページを読み込み中...`;
+        const doc = await getPdfDoc();
+        const page = await doc.getPage(pageNumber);
+        if (!modal.classList.contains("open") || activePdfPage !== pageNumber) return;
+
+        const containerWidth = Math.max(pdfCanvas.parentElement.clientWidth, 320);
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const scale = containerWidth / unscaledViewport.width;
+        const pixelRatio = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale });
+
+        pdfCanvas.width = Math.floor(viewport.width * pixelRatio);
+        pdfCanvas.height = Math.floor(viewport.height * pixelRatio);
+        pdfCanvas.style.width = `${Math.floor(viewport.width)}px`;
+        pdfCanvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const transform = pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0];
+        await page.render({
+          canvasContext: pdfCtx,
+          viewport,
+          transform
+        }).promise;
+        pdfStatus.textContent = `PDF ${pageNumber} ページ`;
+      } catch (error) {
+        pdfStatus.textContent = "PDF表示に失敗しました。通信状態をご確認ください。";
+      }
     }
 
     function downloadCsv() {
@@ -553,6 +643,11 @@
     document.addEventListener("keydown", e => {
       if (e.key === "Escape" && modal.classList.contains("open")) {
         closePdfModal();
+      }
+    });
+    window.addEventListener("resize", () => {
+      if (modal.classList.contains("open")) {
+        renderPdfPage(activePdfPage);
       }
     });
     document.getElementById("sampleBtn").addEventListener("click", () => {
