@@ -26,7 +26,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
     }
     .wrap {
-      max-width: 860px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 18px 14px 40px;
     }
@@ -135,10 +135,25 @@
       padding: 12px;
       margin-bottom: 10px;
       background: #fff;
+      display: grid;
+      grid-template-columns: minmax(240px, 1.3fr) minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: start;
     }
     .card.match {
       background: var(--danger-bg);
       border-color: var(--danger-line);
+    }
+    .card-main {
+      min-width: 0;
+    }
+    .card-side {
+      min-width: 0;
+    }
+    .card-tools {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
     }
     .pill {
       display: inline-block;
@@ -173,10 +188,8 @@
       padding: 8px 2px;
     }
     .source-actions {
-      margin-top: 10px;
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      justify-content: flex-end;
     }
     .link-btn {
       appearance: none;
@@ -185,9 +198,10 @@
       justify-content: center;
       text-decoration: none;
       border-radius: 10px;
-      padding: 9px 12px;
+      min-width: 54px;
+      padding: 7px 10px;
       font: inherit;
-      font-size: .88rem;
+      font-size: .8rem;
       font-weight: 700;
       color: #0f4aa8;
       background: #eef4ff;
@@ -242,6 +256,15 @@
       height: 100%;
       border: 0;
       background: #f1f5f9;
+    }
+    @media (max-width: 900px) {
+      .card {
+        grid-template-columns: 1fr;
+      }
+      .card-tools,
+      .source-actions {
+        justify-content: flex-start;
+      }
     }
     @media (max-width: 640px) {
       .modal {
@@ -450,31 +473,41 @@
 
       const matchCards = matches.map(m => `
         <div class="card match">
-          <div class="drug">${escapeHtml(m.input)}</div>
-          <div>
-            <span class="pill">休薬該当</span>
-            <span class="pill">${escapeHtml(m.category)}</span>
-            <span class="pill">休薬 ${escapeHtml(m.stop_period)}</span>
+          <div class="card-main">
+            <div class="drug">${escapeHtml(m.input)}</div>
+            <div>
+              <span class="pill">休薬該当</span>
+              <span class="pill">${escapeHtml(m.category)}</span>
+              <span class="pill">休薬 ${escapeHtml(m.stop_period)}</span>
+            </div>
           </div>
-          <div class="meta">
-            該当成分：${escapeHtml(m.generic)}<br>
-            ${m.brand_hit ? `商品名ヒット：${escapeHtml(m.brand_hit)}<br>` : ""}
-            ${m.notes ? `備考：${escapeHtml(m.notes)}` : ""}
+          <div class="card-side">
+            <div class="meta">
+              該当成分：${escapeHtml(m.generic)}<br>
+              ${m.brand_hit ? `商品名ヒット：${escapeHtml(m.brand_hit)}<br>` : ""}
+              ${m.notes ? `備考：${escapeHtml(m.notes)}<br>` : ""}
+              参照ページ: PDF ${escapeHtml(String(m.pdf_page))} ページ
+            </div>
           </div>
-          <div class="source-actions">
-            <button class="link-btn" type="button" onclick="openPdfModal(${Number(m.pdf_page)}, '${escapeHtml(m.generic)}')">PDFをポップアップ表示</button>
-            <a class="link-btn" href="${PDF_FILE}#page=${Number(m.pdf_page)}" target="_blank" rel="noopener">別タブで開く</a>
+          <div class="card-tools">
+            <div class="source-actions">
+              <button class="link-btn" type="button" onclick="openPdfModal(${Number(m.pdf_page)}, '${escapeHtml(m.generic)}')">PDF</button>
+            </div>
           </div>
-          <div class="source-note">参照ページ: PDF ${escapeHtml(String(m.pdf_page))} ページ</div>
         </div>
       `);
 
       const nonMatchCards = nonMatches.map(m => `
         <div class="card">
-          <div class="drug">${escapeHtml(m)}</div>
-          <div>
-            <span class="pill">非該当</span>
+          <div class="card-main">
+            <div class="drug">${escapeHtml(m)}</div>
           </div>
+          <div class="card-side">
+            <div>
+              <span class="pill">非該当</span>
+            </div>
+          </div>
+          <div class="card-tools"></div>
         </div>
       `);
 
