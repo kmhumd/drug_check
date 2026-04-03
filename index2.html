@@ -281,15 +281,9 @@
 
     <div class="results">
       <div class="panel">
-        <div class="section-title">休薬候補</div>
-        <div class="stat" id="matchCount">0 件</div>
-        <div id="matchList" class="empty">まだ判定していません。</div>
-      </div>
-
-      <div class="panel">
-        <div class="section-title">非該当</div>
-        <div class="stat" id="nonMatchCount">0 件</div>
-        <div id="nonMatchList" class="empty">まだ判定していません。</div>
+        <div class="section-title">判定結果</div>
+        <div class="stat" id="resultSummary">休薬該当 0 件 / 非該当 0 件 / 合計 0 件</div>
+        <div id="resultList" class="empty">まだ判定していません。</div>
       </div>
     </div>
 
@@ -424,32 +418,41 @@
 
       latestRows = matches.map(m => ({
         入力薬剤: m.input,
+        判定: "休薬該当",
         分類: m.category,
         該当成分: m.generic,
         休薬期間: m.stop_period,
         備考: m.notes,
         PDFページ: m.pdf_page
-      }));
+      })).concat(nonMatches.map(m => ({
+        入力薬剤: m,
+        判定: "非該当",
+        分類: "",
+        該当成分: "",
+        休薬期間: "",
+        備考: "",
+        PDFページ: ""
+      })));
 
-      renderMatches(matches);
-      renderNonMatches(nonMatches);
+      renderResults(matches, nonMatches);
     }
 
-    function renderMatches(matches) {
-      const box = document.getElementById("matchList");
-      document.getElementById("matchCount").textContent = `${matches.length} 件`;
+    function renderResults(matches, nonMatches) {
+      const box = document.getElementById("resultList");
+      const total = matches.length + nonMatches.length;
+      document.getElementById("resultSummary").textContent = `休薬該当 ${matches.length} 件 / 非該当 ${nonMatches.length} 件 / 合計 ${total} 件`;
 
-      if (!matches.length) {
+      if (!total) {
         box.className = "empty";
-        box.textContent = "該当なし";
+        box.textContent = "まだ判定していません。";
         return;
       }
 
-      box.className = "";
-      box.innerHTML = matches.map(m => `
+      const matchCards = matches.map(m => `
         <div class="card match">
           <div class="drug">${escapeHtml(m.input)}</div>
           <div>
+            <span class="pill">休薬該当</span>
             <span class="pill">${escapeHtml(m.category)}</span>
             <span class="pill">休薬 ${escapeHtml(m.stop_period)}</span>
           </div>
@@ -464,7 +467,19 @@
           </div>
           <div class="source-note">参照ページ: PDF ${escapeHtml(String(m.pdf_page))} ページ</div>
         </div>
-      `).join("");
+      `);
+
+      const nonMatchCards = nonMatches.map(m => `
+        <div class="card">
+          <div class="drug">${escapeHtml(m)}</div>
+          <div>
+            <span class="pill">非該当</span>
+          </div>
+        </div>
+      `);
+
+      box.className = "";
+      box.innerHTML = [...matchCards, ...nonMatchCards].join("");
     }
 
     function openPdfModal(page, generic) {
@@ -478,24 +493,6 @@
       modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
       pdfFrame.src = "";
-    }
-
-    function renderNonMatches(nonMatches) {
-      const box = document.getElementById("nonMatchList");
-      document.getElementById("nonMatchCount").textContent = `${nonMatches.length} 件`;
-
-      if (!nonMatches.length) {
-        box.className = "empty";
-        box.textContent = "なし";
-        return;
-      }
-
-      box.className = "";
-      box.innerHTML = nonMatches.map(m => `
-        <div class="card">
-          <div class="drug">${escapeHtml(m)}</div>
-        </div>
-      `).join("");
     }
 
     function downloadCsv() {
@@ -538,12 +535,9 @@
     document.getElementById("clearBtn").addEventListener("click", () => {
       document.getElementById("inputMeds").value = "";
       latestRows = [];
-      document.getElementById("matchCount").textContent = "0 件";
-      document.getElementById("nonMatchCount").textContent = "0 件";
-      document.getElementById("matchList").className = "empty";
-      document.getElementById("nonMatchList").className = "empty";
-      document.getElementById("matchList").textContent = "まだ判定していません。";
-      document.getElementById("nonMatchList").textContent = "まだ判定していません。";
+      document.getElementById("resultSummary").textContent = "休薬該当 0 件 / 非該当 0 件 / 合計 0 件";
+      document.getElementById("resultList").className = "empty";
+      document.getElementById("resultList").textContent = "まだ判定していません。";
       closePdfModal();
     });
   </script>
