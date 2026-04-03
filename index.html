@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>周術期休薬チェック</title>
+  <title>周術期休薬チェック PDF参照版</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -26,7 +26,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
     }
     .wrap {
-      max-width: 860px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 18px 14px 40px;
     }
@@ -135,10 +135,25 @@
       padding: 12px;
       margin-bottom: 10px;
       background: #fff;
+      display: grid;
+      grid-template-columns: minmax(240px, 1.3fr) minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: start;
     }
     .card.match {
       background: var(--danger-bg);
       border-color: var(--danger-line);
+    }
+    .card-main {
+      min-width: 0;
+    }
+    .card-side {
+      min-width: 0;
+    }
+    .card-tools {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
     }
     .pill {
       display: inline-block;
@@ -172,6 +187,95 @@
       color: var(--muted);
       padding: 8px 2px;
     }
+    .source-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .link-btn {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 10px;
+      min-width: 54px;
+      padding: 7px 10px;
+      font: inherit;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #0f4aa8;
+      background: #eef4ff;
+      border: 1px solid #cfe0ff;
+      cursor: pointer;
+    }
+    .source-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.5;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(15, 23, 42, .58);
+      z-index: 999;
+    }
+    .modal.open {
+      display: flex;
+    }
+    .modal-card {
+      width: min(1100px, 100%);
+      height: min(86vh, 900px);
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, .28);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fbff;
+    }
+    .modal-title {
+      font-size: .95rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+    .modal-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #f1f5f9;
+    }
+    @media (max-width: 900px) {
+      .card {
+        grid-template-columns: 1fr;
+      }
+      .card-tools,
+      .source-actions {
+        justify-content: flex-start;
+      }
+    }
+    @media (max-width: 640px) {
+      .modal {
+        padding: 0;
+      }
+      .modal-card {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+      }
+    }
     @media (min-width: 760px) {
       .results {
         grid-template-columns: 1.25fr .75fr;
@@ -182,8 +286,8 @@
 <body>
   <div class="wrap">
     <div class="hero">
-      <h1>周術期休薬チェック</h1>
-      <p class="sub">薬剤名を1行1薬で貼り付けると、院内の休薬一覧に該当する薬剤を抽出します。iPhoneのSafariでも使える単体HTML版です。</p>
+      <h1>周術期休薬チェック PDF参照版</h1>
+      <p class="sub">薬剤名を1行1薬で貼り付けると、休薬候補を抽出し、各結果から元PDFの該当ページをその場で確認できます。ローカル保存したPDFを表示するため、出典の追跡性を残した構成です。</p>
     </div>
 
     <div class="panel">
@@ -195,32 +299,58 @@
         <button class="ghost" id="clearBtn">クリア</button>
         <button class="ghost" id="csvBtn">結果をCSV保存</button>
       </div>
-      <div class="hint">判定はPDF由来マスタに対する文字列照合です。休薬期間は目安で、最終判断は主治医判断です。</div>
+      <div class="hint">判定はPDF由来マスタに対する文字列照合です。各ヒット結果から元PDFページをポップアップ表示できます。休薬期間は目安で、最終判断は主治医判断です。</div>
     </div>
 
     <div class="results">
       <div class="panel">
-        <div class="section-title">休薬候補</div>
-        <div class="stat" id="matchCount">0 件</div>
-        <div id="matchList" class="empty">まだ判定していません。</div>
-      </div>
-
-      <div class="panel">
-        <div class="section-title">非該当</div>
-        <div class="stat" id="nonMatchCount">0 件</div>
-        <div id="nonMatchList" class="empty">まだ判定していません。</div>
+        <div class="section-title">判定結果</div>
+        <div class="stat" id="resultSummary">休薬該当 0 件 / 非該当 0 件 / 合計 0 件</div>
+        <div id="resultList" class="empty">まだ判定していません。</div>
       </div>
     </div>
 
     <div class="foot">
-      出典：アップロードされた「周術期に休薬の検討が必要な薬剤一覧（6版）」をもとに作成。休薬期間は「目安」であり、主治医が患者の状態に応じて判断する前提です。fileciteturn0file0
+      出典：アップロードされた「周術期に休薬の検討が必要な薬剤一覧（6版）」をもとに作成。休薬期間は「目安」であり、主治医が患者の状態に応じて判断する前提です。
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-top:0">
+    <div class="foot">
+      この版ではローカル保存した <a href="yakuzai_2024.pdf" target="_blank" rel="noopener">PDF原本</a> を参照します。
+    </div>
+  </div>
+
+  <div class="modal" id="pdfModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title" id="pdfModalTitle">PDF参照</div>
+        <button class="ghost" id="closePdfBtn" type="button">閉じる</button>
+      </div>
+      <iframe class="modal-frame" id="pdfFrame" title="出典PDF"></iframe>
     </div>
   </div>
 
   <script>
     const MASTER = [{"generic": "EPA・DHA（オメガ-3脂肪酸エチル）", "stop_period": "7-10日", "category": "脂質異常症用薬", "notes": "", "brands": ["オメガ-3脂肪酸エチル", "ロトリガ"]}, {"generic": "EPA（イコサペント酸エチル）", "stop_period": "7-10日", "category": "脂質異常症用薬", "notes": "", "brands": ["イコサペント酸エチル", "エパデール"]}, {"generic": "アキシチニブ", "stop_period": "24時間", "category": "抗がん剤", "notes": "", "brands": ["インライタ"]}, {"generic": "アスピリン", "stop_period": "7-10日", "category": "抗血小板薬", "notes": "", "brands": ["アスピリン", "アスファネート配合錠", "ニトギス配合錠", "バイアスピリン", "バッサミン配合錠", "バファリン配合錠", "ファモター配合錠"]}, {"generic": "アスピリン/クロピドグレル硫酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "配合剤。アスピリン7-10日、クロピドグレル7-14日", "brands": ["コンプラビン配合錠"]}, {"generic": "アスピリン/ボノプラザンフマル酸塩", "stop_period": "7-10日", "category": "抗血小板薬", "notes": "配合剤", "brands": ["キャブピリン配合錠"]}, {"generic": "アスピリン/ランソプラゾール", "stop_period": "7-10日", "category": "抗血小板薬", "notes": "配合剤", "brands": ["タケルダ配合錠"]}, {"generic": "アダリムマブ", "stop_period": "2週間", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["アダリムマブBS", "ヒュミラ"]}, {"generic": "アバタセプト", "stop_period": "医師の判断", "category": "T細胞選択的共刺激調節剤", "notes": "注射剤", "brands": ["オレンシア"]}, {"generic": "アピキサバン", "stop_period": "1-3日", "category": "抗凝固薬", "notes": "", "brands": ["エリキュース"]}, {"generic": "アフリベルセプト ベータ", "stop_period": "6週間", "category": "抗がん剤", "notes": "注射剤", "brands": ["ザルトラップ"]}, {"generic": "アルガトロバン水和物", "stop_period": "2時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["アルガトロバン", "スロンノン", "ノバスタン"]}, {"generic": "イフェンプロジル酒石酸塩", "stop_period": "2日", "category": "脳循環・代謝改善薬", "notes": "", "brands": ["イフェンプロジル酒石酸塩", "セロクラール"]}, {"generic": "イプジラスト", "stop_period": "3日", "category": "脳循環・代謝改善薬", "notes": "", "brands": ["ケタス"]}, {"generic": "イプラグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["スーグラ錠"]}, {"generic": "イプラグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "配合剤", "brands": ["スージャヌ配合錠"]}, {"generic": "インフリキシマブ", "stop_period": "4週間", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["インフリキシマブBS", "レミケード"]}, {"generic": "ウステキヌマブ", "stop_period": "6週間", "category": "ヒト型抗ヒトIL-12/23p40モノクローナル抗体", "notes": "注射剤", "brands": ["ステラーラ"]}, {"generic": "エストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "", "brands": ["エストラジオール錠", "エストラーナテープ", "ジュリナ", "ディビゲル", "ル・エストロジェル"]}, {"generic": "エストリオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "", "brands": ["エストリオール", "エストリール", "エストリール膣錠", "ホーリン", "ホーリンV膣用錠"]}, {"generic": "エタネルセプト", "stop_period": "1-2週間/2-3週間（汚染環境）", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["エタネルセプトBS", "エンブレル"]}, {"generic": "エチニルエストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["プロセキソール"]}, {"generic": "エドキサバントシル酸塩水和物", "stop_period": "1-2日", "category": "抗凝固薬", "notes": "", "brands": ["リクシアナ"]}, {"generic": "エノキサパリンナトリウム", "stop_period": "12時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["クレキサン"]}, {"generic": "エベロリムス", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["アフィニトール"]}, {"generic": "エベロリムス", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "免疫抑制剤", "brands": ["サーティカン"]}, {"generic": "エンパグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["ジャディアンス錠"]}, {"generic": "エンパグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "配合剤", "brands": ["トラディアンス配合錠"]}, {"generic": "オザグレルナトリウム", "stop_period": "24時間", "category": "トロンボキサンA2阻害薬", "notes": "", "brands": ["オザグレルNa", "オザグレルナトリウム"]}, {"generic": "オザグレルナトリウム", "stop_period": "24時間", "category": "トロンボキサンA2阻害薬", "notes": "注射剤", "brands": ["カタクロット", "キサンボン"]}, {"generic": "オザグレル塩酸塩水和物", "stop_period": "1-2日", "category": "トロンボキサンA2阻害薬", "notes": "", "brands": ["ドメナン"]}, {"generic": "カナグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["カナグル錠"]}, {"generic": "カナグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "配合剤", "brands": ["カナリア配合錠"]}, {"generic": "カボザンチニブリンゴ酸塩錠", "stop_period": "28日", "category": "抗がん剤", "notes": "", "brands": ["カボメティクス"]}, {"generic": "クロピドグレル硫酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "", "brands": ["クロピドグレル", "プラビックス", "ロレアス"]}, {"generic": "ゴリムマブ", "stop_period": "2-4週間（可能なら4週間）", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["シンポニー"]}, {"generic": "サリドマイド", "stop_period": "1日", "category": "抗がん剤", "notes": "", "brands": ["サレド"]}, {"generic": "サルポグレラート塩酸塩", "stop_period": "1-2日", "category": "抗血小板薬", "notes": "", "brands": ["アンプラーグ", "サルポグレラート塩酸塩"]}, {"generic": "シロスタゾール", "stop_period": "2-3日", "category": "抗血小板薬", "notes": "", "brands": ["コートリズム", "シロシナミン", "シロスタゾール", "シロスレット", "プレタール", "プレトモール", "ホルダゾール"]}, {"generic": "シロリムス", "stop_period": "14日以上（肺移植）/医師の判断（その他）", "category": "抗がん剤", "notes": "", "brands": ["ラパリムス"]}, {"generic": "ジピリダモール", "stop_period": "1-2日", "category": "冠血管拡張薬", "notes": "", "brands": ["ジピリダモール", "ペルサンチン", "ヨウリダモール"]}, {"generic": "ジラゼプ塩酸塩水和物", "stop_period": "1日", "category": "冠血管拡張薬", "notes": "", "brands": ["コメリアンコーワ", "ジラゼプ塩酸塩"]}, {"generic": "スニチニブリンゴ酸塩", "stop_period": "7-10日", "category": "抗がん剤", "notes": "", "brands": ["スーテント"]}, {"generic": "セルトリズマブペゴル", "stop_period": "医師の判断", "category": "TNF阻害薬", "notes": "注射剤", "brands": ["シムジア"]}, {"generic": "ソラフェニブトシル酸塩", "stop_period": "28日", "category": "抗がん剤", "notes": "最近の臨床報告では7日休薬報告も多い", "brands": ["ネクサバール"]}, {"generic": "ダパグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["フォシーガ錠"]}, {"generic": "ダビガトランエテキシラートメタンスルホン酸塩", "stop_period": "1-4日", "category": "抗凝固薬", "notes": "", "brands": ["プラザキサ"]}, {"generic": "ダルテパリンナトリウム", "stop_period": "12時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["ダルテパリンNa", "フラグミン", "リザルミン"]}, {"generic": "チカグレロル", "stop_period": "5日", "category": "抗血小板薬", "notes": "", "brands": ["ブリリンタ"]}, {"generic": "チクロピジン塩酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "", "brands": ["チクロピジン塩酸塩", "パナルジン", "マイトジン"]}, {"generic": "テムシロリムス", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "注射剤", "brands": ["トーリセル"]}, {"generic": "デソゲストレル・エチニルエストラジオール", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["フォボワール錠21/28", "マーベロン21/28"]}, {"generic": "トファシチニブクエン酸塩", "stop_period": "術前1週間～術後1週間", "category": "JAK阻害薬", "notes": "", "brands": ["ゼルヤンツ"]}, {"generic": "トホグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["デベルザ錠"]}, {"generic": "トラピジル", "stop_period": "1日", "category": "冠血管拡張薬", "notes": "", "brands": ["トラピジル", "ロコルナール"]}, {"generic": "トリメタジジン塩酸塩", "stop_period": "2日", "category": "虚血性心疾患治療薬", "notes": "", "brands": ["バスタレルF"]}, {"generic": "ドロスピレノン・エチニルエストラジオールベータデクス", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["ドロエチ配合錠", "ヤーズフレックス配合錠", "ヤーズ配合錠"]}, {"generic": "ニセルゴリン", "stop_period": "不要", "category": "脳循環・代謝改善薬", "notes": "念のため休薬なら2-3日前", "brands": ["サアミオン", "ニセルゴリン", "マリレオンN"]}, {"generic": "ニンテダニブエタンスルホン酸塩", "stop_period": "7日", "category": "抗線維化剤", "notes": "", "brands": ["オフェブ"]}, {"generic": "ノルエチステロン・エチニルエストラジオール", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["シンフェーズT28", "フリウェル配合錠LD", "ルナベル配合錠LD", "ルナベル配合錠ULD"]}, {"generic": "ノルゲストレル・エチニルエストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["プラノバール配合錠"]}, {"generic": "バゼドキシフェン酢酸塩", "stop_period": "3日", "category": "骨粗鬆症治療薬", "notes": "", "brands": ["バゼドキシフェン", "ビビアント"]}, {"generic": "バリシチニブ", "stop_period": "医師の判断", "category": "JAK阻害薬", "notes": "", "brands": ["オルミエント"]}, {"generic": "バンデタニブ", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["カプレルサ"]}, {"generic": "パゾパニブ塩酸塩", "stop_period": "14日", "category": "抗がん剤", "notes": "海外添付文書では少なくとも7日", "brands": ["ヴォトリエント"]}, {"generic": "フォンダパリヌクスナトリウム", "stop_period": "4日", "category": "抗凝固薬", "notes": "注射剤", "brands": ["アリクストラ"]}, {"generic": "ブホルミン塩酸塩", "stop_period": "術前2日～術後2日", "category": "ビグアナイド薬", "notes": "", "brands": ["ジベトス", "ブホルミン塩酸塩"]}, {"generic": "プラスグレル塩酸塩", "stop_period": "7-14日", "category": "抗血小板薬", "notes": "", "brands": ["エフィエント"]}, {"generic": "ヘパリンカルシウム", "stop_period": "4時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["ヘパリンCa", "ヘパリンカルシウム"]}, {"generic": "ヘパリンナトリウム", "stop_period": "4時間", "category": "抗凝固薬", "notes": "注射剤", "brands": ["ヘパリンNa", "ヘパリンナトリウム"]}, {"generic": "ベバシズマブ", "stop_period": "6週間（大手術）/4週間（小手術）/10-14日（ポート造設等）", "category": "抗がん剤", "notes": "注射剤", "brands": ["アバスチン", "ベバシズマブBS"]}, {"generic": "ベラプロストナトリウム", "stop_period": "1-2日", "category": "プロスタグランジン製剤", "notes": "", "brands": ["ケアロードLA", "ベラサスLA", "ベラプロストNa", "ベラプロストナトリウム"]}, {"generic": "ベラプロストナトリウム", "stop_period": "1-2日", "category": "プロスタグランジン製剤", "notes": "索引では7-10日の表記もあり、元一覧では1-2日", "brands": ["ドルナー", "プロサイリン"]}, {"generic": "ポマリドミド", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["ポマリスト"]}, {"generic": "メトトレキサート", "stop_period": "不要（整形外科予定手術）/医師の判断", "category": "免疫抑制薬", "notes": "12mg/週超の高用量投与、整形外科以外の手術", "brands": ["メソトレキセート", "メトトレキサート", "リウマトレックス"]}, {"generic": "メトホルミン塩酸塩", "stop_period": "術前2日～術後2日", "category": "ビグアナイド薬", "notes": "", "brands": ["グリコラン", "メトグルコ", "メトホルミン塩酸塩"]}, {"generic": "メトホルミン塩酸塩", "stop_period": "術前2日～術後2日", "category": "ビグアナイド薬", "notes": "配合剤", "brands": ["イニシンク", "エクメット", "メタクト", "メトアナ配合錠"]}, {"generic": "メドロキシプロゲステロン酢酸エステル", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "", "brands": ["ヒスロン", "プロベラ"]}, {"generic": "メドロキシプロゲステロン酢酸エステル", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "200mgは術後1週間", "brands": ["メドロキシプロゲステロン酢酸エステル錠"]}, {"generic": "メドロキシプロゲステロン酢酸エステル", "stop_period": "術後1週間", "category": "女性ホルモン製剤", "notes": "高用量200mg", "brands": ["ヒスロンH200mg"]}, {"generic": "ラムシルマブ", "stop_period": "28日", "category": "抗がん剤", "notes": "注射剤", "brands": ["サイラムザ"]}, {"generic": "ラロキシフェン塩酸塩", "stop_period": "3日", "category": "骨粗鬆症治療薬", "notes": "", "brands": ["エビスタ", "ラロキシフェン塩酸塩"]}, {"generic": "リバーロキサバン", "stop_period": "1-2日", "category": "抗凝固薬", "notes": "", "brands": ["イグザレルト"]}, {"generic": "リマプロストアルファデクス", "stop_period": "1-2日", "category": "プロスタグランジン製剤", "notes": "", "brands": ["オパルモン", "リマプロストアルファデクス"]}, {"generic": "ルキソリチニブ", "stop_period": "医師の判断", "category": "JAK阻害薬", "notes": "", "brands": ["ジャカビ"]}, {"generic": "ルセオグリフロジン", "stop_period": "3日", "category": "SGLT2阻害薬", "notes": "", "brands": ["ルセフィ錠"]}, {"generic": "レゴラフェニブ", "stop_period": "2週間", "category": "抗がん剤", "notes": "", "brands": ["スチバーガ"]}, {"generic": "レナリドミド水和物", "stop_period": "医師の判断", "category": "抗がん剤", "notes": "", "brands": ["レナリドミド", "レブラミド"]}, {"generic": "レボノルゲストレル・エストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["ウェールナラ配合錠"]}, {"generic": "レボノルゲストレル・エチニルエストラジオール", "stop_period": "術前4週以内～術後2週以内", "category": "女性ホルモン製剤", "notes": "産後4週以内", "brands": ["アンジュ21/28", "ジェミーナ配合錠", "トリキュラー錠21/28", "ラベルフィーユ錠21/28"]}, {"generic": "レンバチニブメシル酸塩", "stop_period": "7日（半減期の5倍相当）/2日（軽度の処置）", "category": "抗がん剤", "notes": "", "brands": ["レンビマ"]}, {"generic": "ワルファリンカリウム", "stop_period": "3-5日", "category": "抗凝固薬", "notes": "", "brands": ["ワルファリンK", "ワーファリン"]}, {"generic": "結合型エストロゲン", "stop_period": "4週以内", "category": "女性ホルモン製剤", "notes": "", "brands": ["プレマリン"]}, {"generic": "酢酸ノルエチステロン・エストラジオール", "stop_period": "医師の判断", "category": "女性ホルモン製剤", "notes": "低用量ピルに準拠", "brands": ["メノエイドコンビパッチ"]}];
 
+    const PDF_FILE = "yakuzai_2024.pdf";
+    const PDF_PAGE_MAP = [
+      2, 2, 3, 1, 1, 1, 1, 5, 5, 1, 3, 1, 1, 1, 6, 6, 5, 5, 2, 2, 5, 2, 1, 1,
+      4, 4, 6, 6, 2, 2, 2, 6, 6, 3, 1, 5, 4, 1, 1, 4, 1, 1, 3, 5, 3, 6, 1, 1,
+      1, 1, 4, 2, 6, 6, 1, 1, 2, 1, 4, 2, 2, 3, 6, 3, 3, 1, 6, 1, 1, 1, 3, 2,
+      2, 4, 6, 6, 6, 2, 2, 2, 3, 3, 1, 2, 6, 6, 3, 4, 2, 2, 3, 1, 2, 2
+    ];
+
     let latestRows = [];
+
+    const modal = document.getElementById("pdfModal");
+    const modalTitle = document.getElementById("pdfModalTitle");
+    const pdfFrame = document.getElementById("pdfFrame");
+
+    MASTER.forEach((item, index) => {
+      item.pdf_page = PDF_PAGE_MAP[index] || 1;
+    });
 
     function normalize(text) {
       return String(text || "")
@@ -269,7 +399,8 @@
             generic: item.generic,
             stop_period: item.stop_period,
             notes: item.notes || "",
-            brand_hit: item.brands.find(b => medNorm.includes(normalize(b))) || ""
+            brand_hit: item.brands.find(b => medNorm.includes(normalize(b))) || "",
+            pdf_page: item.pdf_page
           });
           continue;
         }
@@ -282,7 +413,8 @@
               generic: item.generic,
               stop_period: item.stop_period,
               notes: item.notes || "",
-              brand_hit: brand
+              brand_hit: brand,
+              pdf_page: item.pdf_page
             });
             break;
           }
@@ -308,59 +440,91 @@
 
       latestRows = matches.map(m => ({
         入力薬剤: m.input,
+        判定: "休薬該当",
         分類: m.category,
         該当成分: m.generic,
         休薬期間: m.stop_period,
-        備考: m.notes
-      }));
+        備考: m.notes,
+        PDFページ: m.pdf_page
+      })).concat(nonMatches.map(m => ({
+        入力薬剤: m,
+        判定: "非該当",
+        分類: "",
+        該当成分: "",
+        休薬期間: "",
+        備考: "",
+        PDFページ: ""
+      })));
 
-      renderMatches(matches);
-      renderNonMatches(nonMatches);
+      renderResults(matches, nonMatches);
     }
 
-    function renderMatches(matches) {
-      const box = document.getElementById("matchList");
-      document.getElementById("matchCount").textContent = `${matches.length} 件`;
+    function renderResults(matches, nonMatches) {
+      const box = document.getElementById("resultList");
+      const total = matches.length + nonMatches.length;
+      document.getElementById("resultSummary").textContent = `休薬該当 ${matches.length} 件 / 非該当 ${nonMatches.length} 件 / 合計 ${total} 件`;
 
-      if (!matches.length) {
+      if (!total) {
         box.className = "empty";
-        box.textContent = "該当なし";
+        box.textContent = "まだ判定していません。";
         return;
       }
 
-      box.className = "";
-      box.innerHTML = matches.map(m => `
+      const matchCards = matches.map(m => `
         <div class="card match">
-          <div class="drug">${escapeHtml(m.input)}</div>
-          <div>
-            <span class="pill">${escapeHtml(m.category)}</span>
-            <span class="pill">休薬 ${escapeHtml(m.stop_period)}</span>
+          <div class="card-main">
+            <div class="drug">${escapeHtml(m.input)}</div>
+            <div>
+              <span class="pill">休薬該当</span>
+              <span class="pill">${escapeHtml(m.category)}</span>
+              <span class="pill">休薬 ${escapeHtml(m.stop_period)}</span>
+            </div>
           </div>
-          <div class="meta">
-            該当成分：${escapeHtml(m.generic)}<br>
-            ${m.brand_hit ? `商品名ヒット：${escapeHtml(m.brand_hit)}<br>` : ""}
-            ${m.notes ? `備考：${escapeHtml(m.notes)}` : ""}
+          <div class="card-side">
+            <div class="meta">
+              該当成分：${escapeHtml(m.generic)}<br>
+              ${m.brand_hit ? `商品名ヒット：${escapeHtml(m.brand_hit)}<br>` : ""}
+              ${m.notes ? `備考：${escapeHtml(m.notes)}<br>` : ""}
+              参照ページ: PDF ${escapeHtml(String(m.pdf_page))} ページ
+            </div>
+          </div>
+          <div class="card-tools">
+            <div class="source-actions">
+              <button class="link-btn" type="button" onclick="openPdfModal(${Number(m.pdf_page)}, '${escapeHtml(m.generic)}')">PDF</button>
+            </div>
           </div>
         </div>
-      `).join("");
-    }
+      `);
 
-    function renderNonMatches(nonMatches) {
-      const box = document.getElementById("nonMatchList");
-      document.getElementById("nonMatchCount").textContent = `${nonMatches.length} 件`;
-
-      if (!nonMatches.length) {
-        box.className = "empty";
-        box.textContent = "なし";
-        return;
-      }
+      const nonMatchCards = nonMatches.map(m => `
+        <div class="card">
+          <div class="card-main">
+            <div class="drug">${escapeHtml(m)}</div>
+          </div>
+          <div class="card-side">
+            <div>
+              <span class="pill">非該当</span>
+            </div>
+          </div>
+          <div class="card-tools"></div>
+        </div>
+      `);
 
       box.className = "";
-      box.innerHTML = nonMatches.map(m => `
-        <div class="card">
-          <div class="drug">${escapeHtml(m)}</div>
-        </div>
-      `).join("");
+      box.innerHTML = [...matchCards, ...nonMatchCards].join("");
+    }
+
+    function openPdfModal(page, generic) {
+      modalTitle.textContent = `${generic} の出典PDF確認`;
+      pdfFrame.src = `${PDF_FILE}#page=${page}&zoom=page-width`;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closePdfModal() {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      pdfFrame.src = "";
     }
 
     function downloadCsv() {
@@ -382,6 +546,15 @@
 
     document.getElementById("runBtn").addEventListener("click", runCheck);
     document.getElementById("csvBtn").addEventListener("click", downloadCsv);
+    document.getElementById("closePdfBtn").addEventListener("click", closePdfModal);
+    modal.addEventListener("click", e => {
+      if (e.target === modal) closePdfModal();
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && modal.classList.contains("open")) {
+        closePdfModal();
+      }
+    });
     document.getElementById("sampleBtn").addEventListener("click", () => {
       document.getElementById("inputMeds").value = [
         "ワーファリン錠1mg",
@@ -394,12 +567,10 @@
     document.getElementById("clearBtn").addEventListener("click", () => {
       document.getElementById("inputMeds").value = "";
       latestRows = [];
-      document.getElementById("matchCount").textContent = "0 件";
-      document.getElementById("nonMatchCount").textContent = "0 件";
-      document.getElementById("matchList").className = "empty";
-      document.getElementById("nonMatchList").className = "empty";
-      document.getElementById("matchList").textContent = "まだ判定していません。";
-      document.getElementById("nonMatchList").textContent = "まだ判定していません。";
+      document.getElementById("resultSummary").textContent = "休薬該当 0 件 / 非該当 0 件 / 合計 0 件";
+      document.getElementById("resultList").className = "empty";
+      document.getElementById("resultList").textContent = "まだ判定していません。";
+      closePdfModal();
     });
   </script>
 </body>
