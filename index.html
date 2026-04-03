@@ -303,6 +303,10 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="hero">
+      <h1>周術期休薬チェック PDF参照版</h1>
+    </div>
+
     <div class="panel">
       <label for="inputMeds">薬剤入力</label>
       <textarea id="inputMeds" placeholder="例&#10;ワーファリン錠1mg&#10;アムロジピンOD錠5mg&#10;フォシーガ錠5mg"></textarea>
@@ -312,6 +316,7 @@
         <button class="ghost" id="clearBtn">クリア</button>
         <button class="ghost" id="csvBtn">結果をCSV保存</button>
       </div>
+      <div class="hint">判定はPDF由来マスタに対する文字列照合です。各ヒット結果から元PDFページをポップアップ表示できます。休薬期間は目安で、最終判断は主治医判断です。</div>
     </div>
 
     <div class="results">
@@ -320,10 +325,6 @@
         <div class="stat" id="resultSummary">休薬該当 0 件 / 非該当 0 件 / 合計 0 件</div>
         <div id="resultList" class="empty">まだ判定していません。</div>
       </div>
-    </div>
-
-    <div class="foot">
-      出典：アップロードされた「周術期に休薬の検討が必要な薬剤一覧（6版）」をもとに作成。休薬期間は「目安」であり、主治医が患者の状態に応じて判断する前提です。
     </div>
   </div>
 
