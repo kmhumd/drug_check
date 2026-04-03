@@ -303,11 +303,6 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="hero">
-      <h1>周術期休薬チェック PDF参照版</h1>
-      <p class="sub">薬剤名を1行1薬で貼り付けると、休薬候補を抽出し、各結果から元PDFの該当ページをその場で確認できます。ローカル保存したPDFを表示するため、出典の追跡性を残した構成です。</p>
-    </div>
-
     <div class="panel">
       <label for="inputMeds">薬剤入力</label>
       <textarea id="inputMeds" placeholder="例&#10;ワーファリン錠1mg&#10;アムロジピンOD錠5mg&#10;フォシーガ錠5mg"></textarea>
@@ -317,7 +312,6 @@
         <button class="ghost" id="clearBtn">クリア</button>
         <button class="ghost" id="csvBtn">結果をCSV保存</button>
       </div>
-      <div class="hint">判定はPDF由来マスタに対する文字列照合です。各ヒット結果から元PDFページをポップアップ表示できます。休薬期間は目安で、最終判断は主治医判断です。</div>
     </div>
 
     <div class="results">
